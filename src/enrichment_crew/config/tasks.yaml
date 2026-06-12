@@ -1,0 +1,60 @@
+research_web:
+  description: >
+    Research {company} (domain: {domain}) on the open web. Determine what the
+    company does and gather recent signals from the last ~12 months: funding or
+    M&A, product launches, leadership changes, hiring trends, and technology
+    signals. Record a source URL for every fact. Mark anything unverifiable as
+    "unknown".
+  expected_output: >
+    A findings brief covering what the company does plus recent signals grouped
+    into funding/M&A, product, leadership, hiring, and tech-stack — each with a
+    source URL. Note explicitly where nothing notable was found.
+  agent: web_researcher
+  async_execution: true
+
+fetch_public_api:
+  description: >
+    Use the Company Info API to retrieve neutral public background on {company}:
+    a description, industry context, and a source link. This provides a citable
+    baseline to cross-check the web findings.
+  expected_output: >
+    The company's public description and summary with the source URL, or an
+    explicit note that no public entry was found.
+  agent: api_researcher
+  async_execution: true
+
+query_internal_records:
+  description: >
+    Ask the internal database what we already know about {company} (domain:
+    {domain}). Look for existing accounts, past deals, known contacts, product
+    usage, or support history. Phrase clear natural-language questions for the
+    database tool. If no internal database is configured, record that plainly
+    and move on — do not invent records.
+  expected_output: >
+    A short summary of internal records found for {company}, or an explicit
+    note that no internal database was available / no records matched.
+  agent: internal_data_researcher
+  async_execution: true
+
+compile_report:
+  description: >
+    Consolidate all three sources — internal records, web findings, and public
+    API background — into one decision-ready profile for {company}.
+    Steps:
+      1. Merge the facts, resolving overlaps and noting any conflicts.
+      2. Use the ICP Fit Score tool to produce a 0-100 fit score. Our ICP:
+         mid-market to enterprise (250+ employees), priority industries
+         (technology, financial services, telecom, CPG, healthcare), and recent
+         AI / automation / digital-transformation investment all raise fit.
+      3. Recommend one concrete next action for the sales team.
+      4. Write a polished Markdown report combining everything, with a Sources
+         section listing every URL used.
+    Do not invent facts that were not in the research; mark gaps as "unknown".
+  expected_output: >
+    A JSON object matching the EnrichedCompanyProfile schema, including all
+    per-source fields, icp_fit_score, icp_fit_rationale, recommended_next_action,
+    sources, and a complete `markdown_report` string containing the consolidated
+    enrichment report.
+  agent: enrichment_analyst
+  # NOTE: `context` is wired in crew.py (compile_report) using the actual Task
+  # objects, which is the reliable form. Don't duplicate it here as strings.
