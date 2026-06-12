@@ -7,9 +7,10 @@ Sources:
 The analyst merges all three into one structured profile + Markdown report.
 """
 
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, LLM, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
+from crewai.tasks.hallucination_guardrail import HallucinationGuardrail
 from crewai_tools import ScrapeWebsiteTool
 
 from enrichment_crew.schemas import EnrichedCompanyProfile
@@ -100,6 +101,23 @@ class EnrichmentCrew():
                 self.query_internal_records(),
             ],
             output_pydantic=EnrichedCompanyProfile,
+            # Production safety net: the HallucinationGuardrail validates the
+            # final report's faithfulness against the gathered research before
+            # the task is allowed to complete (faithfulness score 0-10). It's a
+            # CrewAI library feature — it runs wherever the crew runs. On AMP,
+            # the guardrail's events stream out (llm_guardrail_completed,
+            # task_failed) so you can route a hallucination alert to Slack /
+            # Datadog / PagerDuty via webhook streaming.
+            guardrail=HallucinationGuardrail(
+                context=(
+                    "The enrichment report must only contain facts supported by "
+                    "the research gathered for this company (open-web findings, "
+                    "the public company API, and internal records). Every claim "
+                    "must be grounded in those sources; anything not supported "
+                    "should be marked 'unknown', never fabricated."
+                ),
+                llm=LLM(model="gpt-4o-mini"),
+            ),
         )
 
     # --- Crew -------------------------------------------------------------
