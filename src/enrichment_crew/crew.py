@@ -1,10 +1,9 @@
-"""The enrichment crew: three parallel source researchers + a consolidating analyst.
+"""The enrichment crew: two parallel source researchers + a consolidating analyst.
 
 Sources:
-  1. The open web       (keyless DuckDuckGo search + website scraping)
-  2. A public API       (Wikipedia REST — free, no key)
-  3. Internal database  (NL2SQL via DATABASE_URL, with a graceful fallback)
-The analyst merges all three into one structured profile + Markdown report.
+  1. The open web   (keyless DuckDuckGo search + website scraping)
+  2. A public API   (Wikipedia REST — free, no key)
+The analyst merges both into one structured profile + Markdown report.
 """
 
 from crewai import Agent, Crew, LLM, Process, Task
@@ -15,14 +14,13 @@ from crewai_tools import ScrapeWebsiteTool
 
 from enrichment_crew.schemas import EnrichedCompanyProfile
 from enrichment_crew.tools.company_api_tool import CompanyInfoAPITool
-from enrichment_crew.tools.db_tool import build_internal_db_tool
 from enrichment_crew.tools.icp_tool import ICPFitScoreTool
 from enrichment_crew.tools.web_search_tool import WebSearchTool
 
 
 @CrewBase
 class EnrichmentCrew():
-    """Research a company across three sources in parallel, then consolidate."""
+    """Research a company across two sources in parallel, then consolidate."""
 
     agents: list[BaseAgent]
     tasks: list[Task]
@@ -45,17 +43,6 @@ class EnrichmentCrew():
         return Agent(
             config=self.agents_config['api_researcher'],  # type: ignore[index]
             tools=[CompanyInfoAPITool()],
-            max_iter=5,
-            allow_delegation=False,
-            verbose=True,
-        )
-
-    @agent
-    def internal_data_researcher(self) -> Agent:
-        return Agent(
-            config=self.agents_config['internal_data_researcher'],  # type: ignore[index]
-            # NL2SQLTool if DATABASE_URL is set, else a graceful fallback tool.
-            tools=[build_internal_db_tool()],
             max_iter=5,
             allow_delegation=False,
             verbose=True,
@@ -86,19 +73,12 @@ class EnrichmentCrew():
         )
 
     @task
-    def query_internal_records(self) -> Task:
-        return Task(
-            config=self.tasks_config['query_internal_records'],  # type: ignore[index]
-        )
-
-    @task
     def compile_report(self) -> Task:
         return Task(
             config=self.tasks_config['compile_report'],  # type: ignore[index]
             context=[
                 self.research_web(),
                 self.fetch_public_api(),
-                self.query_internal_records(),
             ],
             output_pydantic=EnrichedCompanyProfile,
             # Production safety net: the HallucinationGuardrail validates the
@@ -111,10 +91,10 @@ class EnrichmentCrew():
             guardrail=HallucinationGuardrail(
                 context=(
                     "The enrichment report must only contain facts supported by "
-                    "the research gathered for this company (open-web findings, "
-                    "the public company API, and internal records). Every claim "
-                    "must be grounded in those sources; anything not supported "
-                    "should be marked 'unknown', never fabricated."
+                    "the research gathered for this company (open-web findings and "
+                    "the public company API). Every claim must be grounded in those "
+                    "sources; anything not supported should be marked 'unknown', "
+                    "never fabricated."
                 ),
                 llm=LLM(model="gpt-4o-mini"),
             ),

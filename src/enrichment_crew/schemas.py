@@ -22,10 +22,6 @@ class EnrichedCompanyProfile(BaseModel):
     key_products: list[str] = Field(default_factory=list, description="Key products or services")
 
     # Per-source findings, so the consolidated report is traceable to each source.
-    internal_record_summary: str = Field(
-        default="No internal records.",
-        description="What the internal database returned (or why it was skipped)",
-    )
     recent_signals: list[str] = Field(
         default_factory=list,
         description="Recent web signals: funding, product, leadership, hiring",

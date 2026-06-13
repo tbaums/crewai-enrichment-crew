@@ -23,23 +23,10 @@ fetch_public_api:
   agent: api_researcher
   async_execution: true
 
-query_internal_records:
-  description: >
-    Ask the internal database what we already know about {company} (domain:
-    {domain}). Look for existing accounts, past deals, known contacts, product
-    usage, or support history. Phrase clear natural-language questions for the
-    database tool. If no internal database is configured, record that plainly
-    and move on — do not invent records.
-  expected_output: >
-    A short summary of internal records found for {company}, or an explicit
-    note that no internal database was available / no records matched.
-  agent: internal_data_researcher
-  async_execution: true
-
 compile_report:
   description: >
-    Consolidate all three sources — internal records, web findings, and public
-    API background — into one decision-ready profile for {company}.
+    Consolidate both sources — web findings and public API background — into
+    one decision-ready profile for {company}.
     Steps:
       1. Merge the facts, resolving overlaps and noting any conflicts.
       2. Use the ICP Fit Score tool to produce a 0-100 fit score. Our ICP:

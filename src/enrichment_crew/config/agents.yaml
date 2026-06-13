@@ -22,25 +22,12 @@ api_researcher:
     the Company Info API for an authoritative baseline and flag when a company
     has no public entry.
 
-internal_data_researcher:
-  role: >
-    Internal Records Researcher
-  goal: >
-    Retrieve everything our internal systems already know about {company}
-    ({domain}) — prior accounts, deals, contacts, or usage — by asking the
-    internal database in plain language. If no internal database is available,
-    note that and rely on the public sources.
-  backstory: >
-    You are a revenue-operations analyst who always checks what the company
-    already knows before going outside. You ask precise questions of the CRM
-    and never fabricate records — if the database returns nothing, you say so.
-
 enrichment_analyst:
   role: >
     Enrichment Analyst & Report Writer
   goal: >
-    Consolidate the internal records, web findings, and public API background
-    into one decision-ready profile for {company}: summarize what the company
+    Consolidate the web findings and public API background into one
+    decision-ready profile for {company}: summarize what the company
     does, its size and industry, recent signals, and recommend a next action
     for the sales team.
   backstory: >
